@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="DermAI — AI-powered skin cancer detection tool. Upload or capture a skin lesion image and get instant analysis across 7 types of skin conditions including melanoma, BCC, and more."
+    />
+    <meta
+      name="keywords"
+      content="skin cancer detection, melanoma detection, AI dermatology, skin lesion analysis, TensorFlow.js"
+    />
+    <title>DermAI — AI Skin Cancer Detection</title>
+
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js"></script>
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Favicon (inline SVG) -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>"
+    />
+  </head>
+  <body>
+    <!-- Animated Background -->
+    <div class="bg-canvas" aria-hidden="true">
+      <div class="bg-orb bg-orb-1"></div>
+      <div class="bg-orb bg-orb-2"></div>
+      <div class="bg-orb bg-orb-3"></div>
+      <div class="grid-lines"></div>
+    </div>
+
+    <!-- App Wrapper -->
+    <div class="app-wrapper">
+
+      <!-- ============================================================
+           HEADER
+           ============================================================ -->
+      <header class="header" role="banner">
+        <div class="logo">
+          <div class="logo-icon" aria-hidden="true">🔬</div>
+          <div class="logo-text">
+            <span class="logo-title">DermAI</span>
+            <span class="logo-subtitle">Skin Cancer Detection System</span>
+          </div>
+        </div>
+        <nav class="header-nav" aria-label="Status">
+          <div
+            id="header-status-badge"
+            class="nav-badge"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="status-dot" aria-hidden="true"></div>
+            <span id="header-status-text">Initializing...</span>
+          </div>
+        </nav>
+      </header>
+
+      <!-- ============================================================
+           HERO SECTION
+           ============================================================ -->
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-badge" aria-label="Technology badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
+          </svg>
+          Powered by TensorFlow.js · HAM10000 Dataset
+        </div>
+
+        <h1 class="hero-title" id="hero-title">
+          Detect Skin Cancer<br />
+          with <span class="gradient-text">AI Precision</span>
+        </h1>
+
+        <p class="hero-desc">
+          Upload or capture a skin lesion image for instant AI-powered
+          analysis. Our model classifies across 7 dermoscopic conditions
+          from the HAM10000 clinical dataset.
+        </p>
+
+        <div class="hero-stats" role="list" aria-label="System statistics">
+          <div class="stat-item" role="listitem">
+            <div class="stat-value">7</div>
+            <div class="stat-label">Conditions Detected</div>
+          </div>
+          <div class="stat-item" role="listitem">
+            <div class="stat-value">10,015</div>
+            <div class="stat-label">Training Images</div>
+          </div>
+          <div class="stat-item" role="listitem">
+            <div class="stat-value">100%</div>
+            <div class="stat-label">Private (In-Browser)</div>
+          </div>
+          <div class="stat-item" role="listitem">
+            <div class="stat-value">&lt;1s</div>
+            <div class="stat-label">Analysis Time</div>
+          </div>
+        </div>
+
+        <!-- Model Loading Progress -->
+        <div
+          id="model-status-bar"
+          class="model-status-bar"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-label="AI model loading progress"
+        >
+          <span aria-hidden="true">🧠</span>
+          <div class="model-progress-wrap">
+            <div id="model-progress-label" class="model-progress-label">
+              Initializing...
+            </div>
+            <div class="model-progress-bar">
+              <div
+                id="model-progress-fill"
+                class="model-progress-fill"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           MAIN ANALYSIS GRID
+           ============================================================ -->
+      <section class="analysis-section" aria-label="Image analysis">
+        
+        <!-- LEFT: Upload / Camera Card -->
+        <div class="upload-card" role="region" aria-label="Image input">
+          <!-- Tabs -->
+          <div class="card-tabs" role="tablist" aria-label="Input method">
+            <button
+              id="tab-upload"
+              class="tab-btn active"
+              role="tab"
+              aria-selected="true"
+              aria-controls="content-upload"
+            >
+              <span class="tab-icon" aria-hidden="true">📁</span>
+              Upload Image
+            </button>
+            <button
+              id="tab-camera"
+              class="tab-btn"
+              role="tab"
+              aria-selected="false"
+              aria-controls="content-camera"
+            >
+              <span class="tab-icon" aria-hidden="true">📷</span>
+              Camera Capture
+            </button>
+          </div>
+
+          <!-- UPLOAD TAB -->
+          <div
+            id="content-upload"
+            class="tab-content active"
+            role="tabpanel"
+            aria-labelledby="tab-upload"
+          >
+            <!-- Drop Zone -->
+            <div
+              id="drop-zone"
+              class="drop-zone"
+              role="button"
+              tabindex="0"
+              aria-label="Drop image here or click to upload"
+              onkeydown="if(event.key==='Enter'||event.key===' ')document.getElementById('file-input').click()"
+            >
+              <div class="drop-zone-inner">
+                <div class="drop-icon" aria-hidden="true">🖼️</div>
+                <div class="drop-title">Drop your image here</div>
+                <div class="drop-subtitle">
+                  or click to browse from your device
+                </div>
+                <div class="drop-formats" aria-label="Accepted file formats">
+                  <span class="format-tag">JPG</span>
+                  <span class="format-tag">PNG</span>
+                  <span class="format-tag">WEBP</span>
+                  <span class="format-tag">BMP</span>
+                  <span class="format-tag">TIFF</span>
+                </div>
+                <button id="btn-select-file" class="btn-upload" type="button">
+                  <span aria-hidden="true">📂</span>
+                  Browse Files
+                </button>
+              </div>
+            </div>
+
+            <!-- Hidden File Input -->
+            <input
+              id="file-input"
+              type="file"
+              accept="image/*"
+              class="sr-only"
+              aria-label="Select image file"
+            />
+
+            <!-- Image Preview -->
+            <div id="image-preview-container" class="image-preview-container">
+              <img
+                id="preview-img"
+                class="preview-img"
+                alt="Uploaded skin lesion image for analysis"
+              />
+              <div class="preview-overlay">
+                <button
+                  id="btn-remove-image"
+                  class="btn-icon"
+                  type="button"
+                  title="Remove image"
+                  aria-label="Remove uploaded image"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <!-- Analyze Button -->
+            <button
+              id="btn-analyze"
+              class="analyze-btn"
+              type="button"
+              disabled
+              aria-label="Analyze the uploaded skin lesion image for cancer detection"
+            >
+              <span aria-hidden="true">🔬</span>
+              <span>Analyze Image</span>
+            </button>
+          </div>
+
+          <!-- CAMERA TAB -->
+          <div
+            id="content-camera"
+            class="tab-content"
+            role="tabpanel"
+            aria-labelledby="tab-camera"
+          >
+            <!-- Camera Video Container -->
+            <div id="camera-container" class="camera-container">
+              <video
+                id="camera-video"
+                class="camera-video"
+                autoplay
+                playsinline
+                muted
+                aria-label="Camera feed"
+              ></video>
+              <div class="camera-overlay" aria-hidden="true">
+                <div class="camera-frame">
+                  <div class="scan-line"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Camera Not Available -->
+            <div
+              id="camera-not-available"
+              class="camera-not-available hidden"
+              role="alert"
+            >
+              <div style="font-size:2rem">📷</div>
+              <div>
+                <strong>Camera not accessible</strong><br />
+                <span style="font-size:0.8rem">Please use the Upload tab to analyze images</span>
+              </div>
+            </div>
+
+            <!-- Camera Controls -->
+            <div class="camera-controls">
+              <button
+                id="btn-start-camera"
+                class="btn-primary"
+                type="button"
+                aria-label="Start camera"
+              >
+                <span aria-hidden="true">📷</span>
+                Start Camera
+              </button>
+              <button
+                id="btn-capture"
+                class="btn-primary hidden"
+                type="button"
+                aria-label="Capture photo"
+              >
+                <span aria-hidden="true">⊙</span>
+                Capture Photo
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Results Panel -->
+        <div
+          class="results-panel"
+          role="region"
+          aria-label="Analysis results"
+          aria-live="polite"
+        >
+          <div class="results-header">
+            <div class="results-title">
+              <span aria-hidden="true">📊</span>
+              Analysis Results
+            </div>
+            <div id="results-meta" class="results-meta"></div>
+          </div>
+
+          <div class="results-body">
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-state" aria-label="No analysis yet">
+              <div class="empty-icon" aria-hidden="true">🧬</div>
+              <div class="empty-title">Awaiting Analysis</div>
+              <div class="empty-desc">
+                Upload or capture a skin lesion image,<br />
+                then click "Analyze Image" to get<br />
+                AI-powered diagnostic insights.
+              </div>
+            </div>
+
+            <!-- Analyzing State -->
+            <div
+              id="analyzing-state"
+              class="analyzing-state"
+              role="status"
+              aria-label="Analyzing image"
+            >
+              <div class="ai-scanner" aria-hidden="true">
+                <div class="scanner-ring scanner-ring-1"></div>
+                <div class="scanner-ring scanner-ring-2"></div>
+                <div class="scanner-ring scanner-ring-3"></div>
+                <div class="scanner-core"></div>
+              </div>
+              <div class="analyzing-text">AI Analysis in Progress</div>
+              <div id="analyzing-step" class="analyzing-step">
+                Initializing model...
+              </div>
+            </div>
+
+            <!-- Results Content -->
+            <div id="results-content" class="results-content">
+              
+              <!-- Top Prediction Card -->
+              <div id="top-prediction" class="top-prediction">
+                <div id="prediction-label" class="prediction-label"></div>
+                <div id="prediction-name" class="prediction-name"></div>
+                <div id="prediction-fullname" class="prediction-fullname"></div>
+                
+                <div class="confidence-display">
+                  <div id="confidence-value" class="confidence-value"></div>
+                  <div class="confidence-bar-wrap">
+                    <div class="confidence-label-sm">Confidence Score</div>
+                    <div class="confidence-bar">
+                      <div id="confidence-fill" class="confidence-fill"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="risk-badge" class="risk-badge"></div>
+              </div>
+
+              <!-- Recommended Action -->
+              <div class="action-card" style="margin-bottom: 1.5rem">
+                <div class="action-label">
+                  <span aria-hidden="true">💡</span> Recommended Action
+                </div>
+                <div id="action-text" class="action-text"></div>
+              </div>
+
+              <!-- All Predictions -->
+              <div class="all-predictions-title">
+                All Classification Scores
+              </div>
+              <div
+                id="prediction-bars"
+                class="prediction-bar-list"
+                role="list"
+                aria-label="Classification scores for all skin conditions"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           CONDITION DETAILS (appears after analysis)
+           ============================================================ -->
+      <section
+        id="details-section"
+        class="details-section"
+        aria-label="Condition details"
+      >
+        <div class="section-header">
+          <h2 class="section-title">
+            <span aria-hidden="true">📋</span> Condition Details
+          </h2>
+          <div class="section-line" aria-hidden="true"></div>
+        </div>
+
+        <div class="details-grid">
+          <!-- Description Card -->
+          <div class="detail-card">
+            <div class="detail-card-icon" aria-hidden="true">📝</div>
+            <div class="detail-card-title">About This Condition</div>
+            <div id="detail-description" class="detail-card-content"></div>
+          </div>
+
+          <!-- Symptoms Card -->
+          <div class="detail-card">
+            <div class="detail-card-icon" aria-hidden="true">🔍</div>
+            <div class="detail-card-title">Signs & Symptoms</div>
+            <ul
+              id="symptom-list"
+              class="symptom-list"
+              aria-label="List of symptoms"
+            ></ul>
+          </div>
+
+          <!-- Treatment & Prognosis Card -->
+          <div class="detail-card">
+            <div class="detail-card-icon" aria-hidden="true">💊</div>
+            <div class="detail-card-title">Treatment Options</div>
+            <div
+              id="treatment-chips"
+              class="treatment-chip-list"
+              style="margin-bottom: 1rem"
+            ></div>
+            <div class="detail-card-title">Survival Rate</div>
+            <div id="survivability-value" class="survivability-display"></div>
+            <div class="survivability-label">
+              When detected &amp; treated early
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           ABCDE GUIDE SECTION
+           ============================================================ -->
+      <section class="guide-section" aria-labelledby="abcde-title">
+        <div class="section-header">
+          <h2 class="section-title" id="abcde-title">
+            <span aria-hidden="true">🩺</span> The ABCDE Guide to Skin Cancer
+          </h2>
+          <div class="section-line" aria-hidden="true"></div>
+        </div>
+        <div
+          id="abcde-grid"
+          class="abcde-grid"
+          role="list"
+          aria-label="ABCDE criteria for skin cancer detection"
+        ></div>
+      </section>
+
+      <!-- ============================================================
+           DISCLAIMER
+           ============================================================ -->
+      <aside class="disclaimer-section" role="note" aria-label="Medical disclaimer">
+        <div class="disclaimer-icon" aria-hidden="true">⚠️</div>
+        <div class="disclaimer-content">
+          <div class="disclaimer-title">Important Medical Disclaimer</div>
+          <p class="disclaimer-text">
+            DermAI is an educational and research tool powered by artificial
+            intelligence. It is <strong>NOT a substitute for professional medical
+            diagnosis</strong>. Results provided by this tool are for informational
+            purposes only and should not be used as the sole basis for medical
+            decisions. Always consult a board-certified dermatologist or
+            oncologist for proper evaluation, diagnosis, and treatment of any
+            skin condition. If you notice any suspicious skin changes, seek
+            medical attention promptly. Early detection saves lives — see a
+            doctor regularly.
+          </p>
+        </div>
+      </aside>
+
+      <!-- ============================================================
+           FOOTER
+           ============================================================ -->
+      <footer class="footer" role="contentinfo">
+        <div class="footer-text">
+          © 2024 DermAI · Built with TensorFlow.js · HAM10000 Dataset
+        </div>
+        <nav class="footer-links" aria-label="Footer links">
+          <a
+            href="https://www.cancer.org/cancer/types/skin-cancer.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+          >
+            American Cancer Society
+          </a>
+          <a
+            href="https://www.aad.org/public/diseases/skin-cancer"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+          >
+            AAD Resources
+          </a>
+          <a
+            href="https://www.skincancer.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+          >
+            Skin Cancer Foundation
+          </a>
+        </nav>
+      </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div
+      id="toast"
+      class="toast"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+    >
+      <span id="toast-icon" class="toast-icon" aria-hidden="true"></span>
+      <span id="toast-text"></span>
+    </div>
+
+    <!-- App Script (ES module) -->
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
