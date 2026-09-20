@@ -6,8 +6,6 @@
 [![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-FF6F00?style=flat&logo=tensorflow&logoColor=white)](https://www.tensorflow.org/js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-> **⚠️ Disclaimer:** This tool is for **educational purposes only** and is **not a substitute for professional medical advice**. Always consult a qualified dermatologist or healthcare provider for diagnosis and treatment.
-
 ---
 
 ## 📋 Overview
@@ -130,15 +128,6 @@ DermAI also educates users on the **ABCDE criteria** for identifying potentially
 | **E** | **Evolving** — Changing in size, shape, or color |
 
 ---
-
-## ⚠️ Medical Disclaimer
-
-This application is built for **educational and research purposes only**.
-
-- It is **NOT** a certified medical device
-- Results should **NOT** be used to self-diagnose or replace professional medical advice
-- Always consult a **licensed dermatologist or physician** for any skin concerns
-- Early detection saves lives — please see a doctor if you have any concerns
 
 ---
 
