@@ -16,6 +16,19 @@
 
 ---
 
+## 📸 Screenshots
+
+### 🏠 Home Page
+![DermAI Home Page](ist%20page.png)
+
+### 📊 Analysis Results — Full View
+![Analysis Results Full View](2nd.png)
+
+### 🔬 Condition Details & ABCDE Guide
+![Condition Details and ABCDE Guide](3rd.png)
+
+---
+
 ## ✨ Features
 
 - 🖼️ **Image Upload** — Drag & drop or browse to upload a skin lesion image
@@ -82,12 +95,15 @@ Then open `http://localhost:8080` in your browser.
 
 ```
 skin-cancer-detection/
-├── index.html       # Main app UI & layout
-├── styles.css       # All styling, animations & responsive design
-├── app.js           # Core application logic & UI interactions
-├── model.js         # TensorFlow.js model loading & inference
-├── data.js          # Skin condition data, descriptions & ABCDE criteria
-└── README.md        # This file
+├── index.html        # Main app UI & layout
+├── styles.css        # All styling, animations & responsive design
+├── app.js            # Core application logic & UI interactions
+├── model.js          # TensorFlow.js model loading & inference
+├── data.js           # Skin condition data, descriptions & ABCDE criteria
+├── ist page.png      # Screenshot — Home page
+├── 2nd.png           # Screenshot — Analysis results
+├── 3rd.png           # Screenshot — Condition details & ABCDE guide
+└── README.md         # This file
 ```
 
 ---
@@ -98,12 +114,6 @@ skin-cancer-detection/
 2. **Image Preprocessing** — The input image is resized and normalized to match the model's expected input format
 3. **Inference** — The model runs predictions and outputs probability scores for all 7 classes
 4. **Results Display** — The top prediction is shown with confidence, risk level, symptoms, treatment info, and recommended actions
-
----
-
-## 📸 Screenshots
-
-> _Upload or capture a skin lesion image and receive instant AI analysis._
 
 ---
 
